@@ -8,6 +8,30 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
+pre-commit = "^3.8.0"
+mypy = "^1.11.1"
+ruff = "^0.6.2"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+python_version = "3.11"
+files = "^(github_events_api)"
 
 [build-system]
 requires = ["poetry-core"]
