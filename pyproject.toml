@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "github-events-api"
+version = "0.1.0"
+description = ""
+authors = ["Iva Kocourkova <iva@kocourkovi.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
