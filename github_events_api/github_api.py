@@ -9,7 +9,6 @@ log = logging.getLogger(__name__)
 GITHUB_API_URL = "https://api.github.com/"
 GITHUB_API_REPOS_URL = f"{GITHUB_API_URL}/repos"
 
-
 # Github API has default 30, max limit 100
 PER_PAGE_EVENTS = 100
 
