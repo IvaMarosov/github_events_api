@@ -14,6 +14,7 @@ from github_events_api.data_storage import (
 from github_events_api.github_api import get_github_events_per_repo, get_repository_info
 
 log = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 REPOS_THRESHOLD = 5
 
