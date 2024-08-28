@@ -97,7 +97,7 @@ def get_github_events_per_repo(
 def get_repository_info(repo_owner: str, repo_name: str, personal_token: str) -> dict:
     """Get information about repository through Github API."""
     url = f"{GITHUB_API_REPOS_URL}/{repo_owner}/{repo_name}"
-    log.info(f"Sending request to get events info from {url}...")
+    log.info(f"Sending request to get repository info from {url}...")
 
     response = _retry_request(
         url=url,

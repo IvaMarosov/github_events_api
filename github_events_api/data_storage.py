@@ -86,11 +86,13 @@ def find_repository_by_full_name(repo_full_name: str) -> Repository | None:
     with Session(engine) as session:
         statement = select(Repository).where(Repository.full_name == repo_full_name)
         results = session.exec(statement)
-        try:
-            return results.first()
-        except StopIteration:
-            log.warn(f"No record for repository '{repo_full_name}' found in database.")
+        repository = results.first()
+
+        if repository is None:
+            log.info(f"No record for repository '{repo_full_name}' found in database.")
             return None
+
+        return repository
 
 
 def update_repository_etag(repo_id: int, new_etag: str) -> None:
