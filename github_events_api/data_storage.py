@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 
+import pandas as pd
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
 SQLITE_FILENAME = "data/sql_model.db"
@@ -42,9 +43,23 @@ class Event(SQLModel, table=True):
             id=int(data["id"]),
             type=data["type"],
             actor_id=data["actor"]["id"],
-            actor_name=data["actor"]["login"],
             repo_id=data["repo"]["id"],
             created_at=datetime.strptime(data["created_at"], "%Y-%m-%dT%H:%M:%SZ"),
+        )
+
+
+class Statistics(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    repo_id: int = Field(nullable=False)
+    event_type: str = Field(nullable=False, foreign_key="repository.id")
+    avg_time_diff_secs: float | None = Field(nullable=True)
+
+    @classmethod
+    def from_df(cls, data: pd.Series) -> "Statistics":
+        return Statistics(
+            repo_id=data["repo_id"],
+            event_type=data["type"],
+            avg_time_diff_secs=data["avg_time_diff_secs"],
         )
 
 
@@ -53,7 +68,7 @@ def create_db_and_tables():
 
 
 def create_events(events_data: list[dict]) -> None:
-    events = tuple([Event.from_data(e) for e in events_data])
+    events = [Event.from_data(e) for e in events_data]
     with Session(engine) as session:
         count = 0
         for e in events:
@@ -82,6 +97,14 @@ def create_repository(repo_data: dict, etag: str | None) -> None:
         session.commit()
 
 
+def create_statistics(data: pd.DataFrame) -> None:
+    stats = [Statistics.from_df(s) for _, s in data.iterrows()]
+    with Session(engine) as session:
+        for stat in stats:
+            session.add(stat)
+        session.commit()
+
+
 def find_repository_by_full_name(repo_full_name: str) -> Repository | None:
     with Session(engine) as session:
         statement = select(Repository).where(Repository.full_name == repo_full_name)
@@ -93,6 +116,14 @@ def find_repository_by_full_name(repo_full_name: str) -> Repository | None:
             return None
 
         return repository
+
+
+def find_all_events() -> list[Event]:
+    with Session(engine) as session:
+        statement = select(Event)
+        result = session.exec(statement)
+
+        return list(result.all())
 
 
 def update_repository_etag(repo_id: int, new_etag: str) -> None:

@@ -3,11 +3,17 @@ import os
 
 from dotenv import load_dotenv
 
+from github_events_api.calculations import (
+    calculate_rolling_avg_time_diff_per_event_type,
+    load_events_data_into_df,
+)
 from github_events_api.configuation import limit_number_of_repos, open_config
 from github_events_api.data_storage import (
     create_db_and_tables,
     create_events,
     create_repository,
+    create_statistics,
+    find_all_events,
     find_repository_by_full_name,
     update_repository_etag,
 )
@@ -53,6 +59,12 @@ def main():
         if repo_events_response:
             create_events(repo_events_response)
             update_repository_etag(repo_id, new_etag)
+
+    # calculations of statistics
+    events = find_all_events()
+    events_df = load_events_data_into_df(events)
+    statistics = calculate_rolling_avg_time_diff_per_event_type(events_df)
+    create_statistics(statistics)
 
 
 if __name__ == "__main__":
