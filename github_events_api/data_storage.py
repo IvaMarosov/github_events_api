@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime
+from typing import Sequence
 
 import pandas as pd
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
-SQLITE_FILENAME = "data/sql_model.db"
-SQLITE_URL = f"sqlite:///{SQLITE_FILENAME}"
+from github_events_api.constants import SQLITE_URL
 
 engine = create_engine(SQLITE_URL, echo=False)
 
@@ -50,8 +50,8 @@ class Event(SQLModel, table=True):
 
 class Statistics(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    repo_id: int = Field(nullable=False)
-    event_type: str = Field(nullable=False, foreign_key="repository.id")
+    repo_id: int = Field(nullable=False, foreign_key="repository.id")
+    event_type: str = Field(nullable=False)
     avg_time_diff_secs: float | None = Field(nullable=True)
 
     @classmethod
@@ -64,10 +64,12 @@ class Statistics(SQLModel, table=True):
 
 
 def create_db_and_tables():
+    """Start SQLite db and create tables defined by SQLModel."""
     SQLModel.metadata.create_all(engine)
 
 
 def create_events(events_data: list[dict]) -> None:
+    """Store events into db 'Event' table."""
     events = [Event.from_data(e) for e in events_data]
     with Session(engine) as session:
         count = 0
@@ -89,6 +91,7 @@ def create_events(events_data: list[dict]) -> None:
 
 
 def create_repository(repo_data: dict, etag: str | None) -> None:
+    """Store repository information into 'Repository' table in db."""
     # get info about repository from single event
     repository = Repository.from_data(repo_data, etag)
 
@@ -98,6 +101,7 @@ def create_repository(repo_data: dict, etag: str | None) -> None:
 
 
 def create_statistics(data: pd.DataFrame) -> None:
+    """Store statistics into 'Statistics' db table."""
     stats = [Statistics.from_df(s) for _, s in data.iterrows()]
     with Session(engine) as session:
         for stat in stats:
@@ -106,19 +110,66 @@ def create_statistics(data: pd.DataFrame) -> None:
 
 
 def find_repository_by_full_name(repo_full_name: str) -> Repository | None:
+    """
+    Get single repository from 'Repository' table based on its full name.
+    Full name is put together from repository owner and repository name.
+    Return None if no repository found for given full name.
+
+    Example:
+        - owner: datamole-ai
+        - name: edvart
+        => full_name == datamole-ai/edvart
+    """
     with Session(engine) as session:
         statement = select(Repository).where(Repository.full_name == repo_full_name)
         results = session.exec(statement)
+        # assumption: there is only one repository for each full name
+        # full name consist of repository owner and repository name
         repository = results.first()
 
         if repository is None:
-            log.info(f"No record for repository '{repo_full_name}' found in database.")
+            log.warn(
+                f"No record for repository with full name '{repo_full_name}' found in database."
+            )
             return None
 
         return repository
 
 
+def find_repository_by_owner(repo_owner: str) -> Sequence[Repository] | None:
+    """
+    Get list of repositories based on their owner.
+    Return None if no such repository found.
+    """
+    with Session(engine) as session:
+        statement = select(Repository).where(Repository.owner == repo_owner)
+        results = session.exec(statement).all()
+
+        if results is None:
+            log.warn(f"No record for repository owner '{repo_owner}' found in database.")
+            return None
+
+        return results
+
+
+def find_repository_by_name(repo_name: str) -> Sequence[Repository] | None:
+    """
+    Get list of repositories based on repository name.
+    Return None if no such repository found.
+    """
+    with Session(engine) as session:
+        statement = select(Repository).where(Repository.name == repo_name)
+        results = session.exec(statement).all()
+
+        if results is None:
+            log.warn(f"No record for repository name '{repo_name}' found in database.")
+            return None
+
+        return results
+
+
 def find_all_events() -> list[Event]:
+    """Get list of all events stored in 'Event' db table."""
     with Session(engine) as session:
         statement = select(Event)
         result = session.exec(statement)
@@ -126,7 +177,65 @@ def find_all_events() -> list[Event]:
         return list(result.all())
 
 
+def find_all_stats() -> list[Statistics]:
+    """Get list of statistics stored in 'Statistics' db table."""
+    with Session(engine) as session:
+        statement = select(Statistics)
+        result = session.exec(statement)
+        return list(result.all())
+
+
+def find_stats_by_params(
+    repo_owner: str | None, repo_name: str | None, event_type: str | None
+) -> list[Statistics]:
+    """
+    Get filtered list of statistics from 'Statistics' db table.
+    User can filter by one or more parameters:
+    - repository owner
+    - repository name
+    - event type
+
+    If none of the parameters is filled, it returns list of all statistics in db.
+    If both repo_owner and repo_name is defined, statistics will be filtered based on
+    repository full name.
+    """
+    stats = find_all_stats()
+    log.debug(f"Found {len(stats)} total statistics records.")
+
+    def get_repositories() -> Sequence[Repository] | None:
+        log.debug(
+            f"Run get_repositories with setting: repo_owner={repo_owner}, "
+            f"repo_name={repo_name}, event_type={event_type}"
+        )
+        repos: Sequence[Repository] | None = None
+        if repo_owner and repo_name:
+            repo_full_name = f"{repo_owner}/{repo_name}"
+            repo = find_repository_by_full_name(repo_full_name)
+            repos = [repo] if repo else None
+        elif repo_owner:
+            repos = find_repository_by_owner(repo_owner)
+        elif repo_name:
+            repos = find_repository_by_name(repo_name)
+
+        return repos
+
+    repos = get_repositories()
+
+    if repos:
+        stats = [s for s in stats if s.repo_id in [r.id for r in repos]]
+
+    if event_type:
+        stats = [s for s in stats if s.event_type == event_type]
+
+    return stats
+
+
 def update_repository_etag(repo_id: int, new_etag: str) -> None:
+    """
+    Update etag for repository based on the latest request to Github Events API.
+    More info in
+    https://docs.github.com/en/rest/activity/events?apiVersion=2022-11-28#about-github-events
+    """
     with Session(engine) as session:
         statement = select(Repository).where(Repository.id == repo_id)
         results = session.exec(statement)
