@@ -10,11 +10,16 @@ from github_events_api.data_storage import (
 
 log = logging.getLogger(__name__)
 
-app = FastAPI()
+API_TITLE = "AVG time between Github Events API"
+API_DESCR = "This API will give you average time difference between consequtive "
+"Github events of same type for given repository. The metric is in seconds."
+API_VERSION = "1.0.0"
+
+app = FastAPI(title=API_TITLE, description=API_DESCR, version=API_VERSION)
 
 
-@app.get("/")
-def get_all_stats() -> list[Statistics]:
+@app.get("/", response_model=list[Statistics])
+def get_all_stats():
     return find_all_stats()
 
 

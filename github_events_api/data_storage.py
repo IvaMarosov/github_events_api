@@ -49,10 +49,17 @@ class Event(SQLModel, table=True):
 
 
 class Statistics(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    repo_id: int = Field(nullable=False, foreign_key="repository.id")
-    event_type: str = Field(nullable=False)
-    avg_time_diff_secs: float | None = Field(nullable=True)
+    id: int | None = Field(
+        default=None, primary_key=True, description="Unique ID for statistics record."
+    )
+    repo_id: int = Field(
+        nullable=False, foreign_key="repository.id", description="ID of repository."
+    )
+    event_type: str = Field(nullable=False, description="Type of event, e.g. WatchEvent.")
+    avg_time_diff_secs: float | None = Field(
+        nullable=True,
+        description="Avg time difference between events of same type and repository. In seconds.",
+    )
 
     @classmethod
     def from_df(cls, data: pd.Series) -> "Statistics":
