@@ -53,7 +53,10 @@ def calculate_rolling_avg_time_diff_per_event_type(data: pd.DataFrame) -> pd.Dat
     # get time diff between consecutive events
     avg_time_diff_secs = (
         data.groupby([EVENT_REPO_ID, EVENT_TYPE])
-        .apply(lambda x: pd.Series({EVENT_AVG_TIME_DIFF: _calculate_rolling_average_time_diff(x)}))
+        .apply(
+            lambda x: pd.Series({EVENT_AVG_TIME_DIFF: _calculate_rolling_average_time_diff(x)}),
+            include_groups=False,
+        )
         .reset_index()
     )
 
