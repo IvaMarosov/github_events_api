@@ -4,6 +4,8 @@ import re
 import requests
 from requests.adapters import HTTPAdapter, Retry
 
+from github_events_api.configuation import RepositoryConfig
+
 log = logging.getLogger(__name__)
 
 GITHUB_API_URL = "https://api.github.com/"
@@ -40,7 +42,7 @@ def _retry_request(url: str, headers: dict, params: dict) -> requests.Response:
 
 
 def get_github_events_per_repo(
-    repo_owner: str, repo_name: str, personal_token: str, last_etag: str | None
+    repository: RepositoryConfig, personal_token: str, last_etag: str | None
 ) -> tuple[list[dict] | None, str | None]:
     """
     Send get request to Github Events API endpoint. Include retries in case of errors which
@@ -52,7 +54,7 @@ def get_github_events_per_repo(
         - list of repository events or None if there are no new events
         - etag of the most recent request; None if no new events
     """
-    url = f"{GITHUB_API_REPOS_URL}/{repo_owner}/{repo_name}/events"
+    url = f"{GITHUB_API_REPOS_URL}/{repository.owner}/{repository.name}/events"
     header = {
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {personal_token}",
@@ -67,7 +69,7 @@ def get_github_events_per_repo(
 
     # handle no new events
     if response.status_code == 304:
-        log.info(f"There are no new events for {repo_owner}/{repo_name} repository.")
+        log.info(f"There are no new events for {repository.full_name} repository.")
         return None, None
 
     response.raise_for_status()
@@ -94,9 +96,9 @@ def get_github_events_per_repo(
     return responses_list, etag
 
 
-def get_repository_info(repo_owner: str, repo_name: str, personal_token: str) -> dict:
+def get_repository_info(repository: RepositoryConfig, personal_token: str) -> dict:
     """Get information about repository through Github API."""
-    url = f"{GITHUB_API_REPOS_URL}/{repo_owner}/{repo_name}"
+    url = f"{GITHUB_API_REPOS_URL}/{repository.owner}/{repository.name}"
     log.info(f"Sending request to get repository info from {url}...")
 
     response = _retry_request(

@@ -10,6 +10,10 @@ class RepositoryConfig(BaseModel):
     owner: str
     name: str
 
+    @property
+    def full_name(self):
+        return f"{self.owner}/{self.name}"
+
 
 def open_config(file_path: str) -> list[dict]:
     """Open yaml configuration with list of repositories."""
