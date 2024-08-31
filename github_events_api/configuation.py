@@ -1,8 +1,14 @@
 import logging
 
 import yaml
+from pydantic import BaseModel
 
 log = logging.getLogger(__name__)
+
+
+class RepositoryConfig(BaseModel):
+    owner: str
+    name: str
 
 
 def open_config(file_path: str) -> list[dict]:
@@ -13,14 +19,23 @@ def open_config(file_path: str) -> list[dict]:
     return yaml_config
 
 
-def limit_number_of_repos(config: list[dict], threshold: int) -> list[dict]:
+def load_repository_config(file_path: str) -> tuple[RepositoryConfig, ...]:
+    """Load repositories' configuration."""
+    repos_config = open_config(file_path)
+
+    return tuple([RepositoryConfig(**r) for r in repos_config])
+
+
+def limit_number_of_repos(
+    repos: tuple[RepositoryConfig, ...], threshold: int
+) -> tuple[RepositoryConfig, ...]:
     """Get only defined number of repositories from configuration."""
-    if len(config) > threshold:
-        log.warn(
-            f"Number of configured repositories {len(config)} is over the threshold {threshold}. "
+    if len(repos) > threshold:
+        log.warning(
+            f"Number of configured repositories {len(repos)} is over the threshold {threshold}. "
             f"Limiting to first {threshold} repositories."
         )
 
-        return config[:threshold]
+        return repos[:threshold]
 
-    return config
+    return repos

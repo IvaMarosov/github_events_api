@@ -13,6 +13,9 @@ python-dotenv = "^1.0.1"
 pyyaml = "^6.0.2"
 fastapi = "^0.112.2"
 uvicorn = "^0.30.6"
+pydantic = "^2.8.2"
+pandas = "^2.2.2"
+numpy = "^2.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
