@@ -19,9 +19,7 @@ def get_all_stats() -> list[Statistics]:
 
 
 @app.get("/statistics/")
-def get_stats_by_params(
-    repo_owner: str | None = None, repo_name: str | None = None, event_type: str | None = None
-) -> dict:
+def get_stats_by_params(repo_owner: str, repo_name: str, event_type: str) -> dict:
     log.debug(
         f"get_stats_by_params called with repo_owner={repo_owner}, repo_name={repo_name}, "
         f"event_type={event_type}"

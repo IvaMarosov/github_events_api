@@ -185,9 +185,7 @@ def find_all_stats() -> list[Statistics]:
         return list(result.all())
 
 
-def find_stats_by_params(
-    repo_owner: str | None, repo_name: str | None, event_type: str | None
-) -> list[Statistics]:
+def find_stats_by_params(repo_owner: str, repo_name: str, event_type: str) -> list[Statistics]:
     """
     Get filtered list of statistics from 'Statistics' db table.
     User can filter by one or more parameters:
@@ -199,35 +197,19 @@ def find_stats_by_params(
     If both repo_owner and repo_name is defined, statistics will be filtered based on
     repository full name.
     """
-    stats = find_all_stats()
-    log.debug(f"Found {len(stats)} total statistics records.")
+    all_stats = find_all_stats()
+    log.debug(f"Found {len(all_stats)} total statistics records.")
 
-    def get_repositories() -> Sequence[Repository] | None:
-        log.debug(
-            f"Run get_repositories with setting: repo_owner={repo_owner}, "
-            f"repo_name={repo_name}, event_type={event_type}"
-        )
-        repos: Sequence[Repository] | None = None
-        if repo_owner and repo_name:
-            repo_full_name = f"{repo_owner}/{repo_name}"
-            repo = find_repository_by_full_name(repo_full_name)
-            repos = [repo] if repo else None
-        elif repo_owner:
-            repos = find_repository_by_owner(repo_owner)
-        elif repo_name:
-            repos = find_repository_by_name(repo_name)
+    repository = find_repository_by_full_name(f"{repo_owner}/{repo_name}")
 
-        return repos
+    if repository is None:
+        raise KeyError(f"There is no repository for owner: {repo_owner} and name: {repo_name}.")
 
-    repos = get_repositories()
+    repo_stats = [s for s in all_stats if s.repo_id == repository.id]
 
-    if repos:
-        stats = [s for s in stats if s.repo_id in [r.id for r in repos]]
+    event_stats = [s for s in repo_stats if s.event_type == event_type]
 
-    if event_type:
-        stats = [s for s in stats if s.event_type == event_type]
-
-    return stats
+    return event_stats
 
 
 def update_repository_etag(repo_id: int, new_etag: str) -> None:
