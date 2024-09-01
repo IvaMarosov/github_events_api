@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Sequence
 
 import pandas as pd
+from sqlalchemy import inspect
 from sqlmodel import Field, Session, SQLModel, create_engine, delete, select
 
 from github_events_api.constants import SQLITE_URL
@@ -10,6 +11,20 @@ from github_events_api.constants import SQLITE_URL
 engine = create_engine(SQLITE_URL, echo=False)
 
 log = logging.getLogger(__name__)
+
+
+def check_database_exists() -> bool:
+    try:
+        # check if there are any tables in the db
+        inspector = inspect(engine)
+        tables = inspector.get_table_names()
+        return len(tables) > 0
+    except Exception as e:
+        log.error(f"Database error: {e}.")
+        log.debug(
+            "Hint: Before you call any API endpoints, create the database and required table."
+        )
+        return False
 
 
 class Repository(SQLModel, table=True):
