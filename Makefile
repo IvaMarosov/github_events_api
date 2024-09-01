@@ -6,7 +6,7 @@ help:
 	@echo "make lint"
 	@echo "     run complete pre-commit/pre-push lint"
 	@echo "make test"
-	@echo "     run tests - only short run"
+	@echo "     run tests"
 	@echo "make check"
 	@echo "     run all checks - linting + tests"
 
