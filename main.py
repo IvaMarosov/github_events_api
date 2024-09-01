@@ -17,6 +17,7 @@ from github_events_api.data_storage import (
     create_events,
     create_repository,
     create_statistics,
+    delete_statistics,
     find_all_events,
     find_repository_by_full_name,
     update_repository_etag,
@@ -63,6 +64,9 @@ def main():
         if repo_events_response:
             create_events(repo_events_response)
             update_repository_etag(repo_id, new_etag)
+
+    # whipe Statistics db table before adding new calculations
+    delete_statistics()
 
     # calculate statistics and save them into db
     events = find_all_events()

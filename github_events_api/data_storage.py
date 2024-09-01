@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Sequence
 
 import pandas as pd
-from sqlmodel import Field, Session, SQLModel, create_engine, select
+from sqlmodel import Field, Session, SQLModel, create_engine, delete, select
 
 from github_events_api.constants import SQLITE_URL
 
@@ -232,3 +232,11 @@ def update_repository_etag(repo_id: int, new_etag: str) -> None:
         repository.etag = new_etag
         session.add(repository)
         session.commit()
+
+
+def delete_statistics():
+    """Delete records from Statistics table."""
+    with Session(engine) as session:
+        results = session.exec(delete(Statistics))
+        session.commit()
+        log.info(f"Deleted {results.rowcount} records from Statistics db table.")
