@@ -65,7 +65,7 @@ def main():
             create_events(repo_events_response)
             update_repository_etag(repo_id, new_etag)
 
-    # whipe Statistics db table before adding new calculations
+    # wipe Statistics db table before adding new calculations
     delete_statistics()
 
     # calculate statistics and save them into db

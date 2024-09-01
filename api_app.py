@@ -12,7 +12,7 @@ from github_events_api.data_storage import (
 log = logging.getLogger(__name__)
 
 API_TITLE = "AVG time between Github Events API"
-API_DESCR = "This API will give you average time difference between consequtive "
+API_DESCR = "This API will give you average time difference between following "
 "Github events of same type for given repository. The metric is in seconds."
 API_VERSION = "1.0.0"
 

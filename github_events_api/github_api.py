@@ -46,7 +46,7 @@ def get_github_events_per_repo(
 ) -> tuple[list[dict] | None, str | None]:
     """
     Send get request to Github Events API endpoint. Include retries in case of errors which
-    could be sensitive to load. "last_etag" serves to request only newly occured events for given
+    could be sensitive to load. "last_etag" serves to request only newly occurred events for given
     repository. Handle pagination.
 
     :return:

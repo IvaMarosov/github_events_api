@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: AVG time between Github Events API
-  description: 'This API will give you average time difference between consequtive '
+  description: 'This API will give you average time difference between following '
   version: 1.0.0
 paths:
   /:

@@ -32,11 +32,11 @@ def _calculate_rolling_average_time_diff(events_group: pd.DataFrame) -> float:
     start_date = last_date - pd.Timedelta(days=7)
     date_mask = events_group[EVENT_CREATED_AT] >= start_date
 
-    eligable_events = events_group.loc[date_mask].head(500)
+    eligible_events = events_group.loc[date_mask].head(500)
     # get time difference between events
-    eligable_events[EVENT_TIME_DIFF] = eligable_events[EVENT_CREATED_AT].diff()
+    eligible_events[EVENT_TIME_DIFF] = eligible_events[EVENT_CREATED_AT].diff()
 
-    return eligable_events[EVENT_TIME_DIFF].mean().total_seconds()
+    return eligible_events[EVENT_TIME_DIFF].mean().total_seconds()
 
 
 def calculate_rolling_avg_time_diff_per_event_type(data: pd.DataFrame) -> pd.DataFrame:

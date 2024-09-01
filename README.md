@@ -6,14 +6,14 @@ This project is part of the DataMole hiring process for Python Data Engineer.
 
 The goal of this application is to be able request data from Github API. Those data are information
 about Github events happening in configured repositories. Second part is to have API endpoints to
-get statistics - average time difference between consequtive events for given repository and event type.
+get statistics - average time difference between following events for given repository and event type.
 They are averaged either over 7 days or 500 events, which of those will happen first.
 
 ## Setup
 
 - this project uses Python 3.11.9, see [.python-version](.python-version) file
 - for managing virtual environments and dependencies, please install [poetry](https://python-poetry.org/docs/#installation)
-  - to install dependencies in your virtual environmnet you can run `poetry install`; more info [here](https://python-poetry.org/docs/cli/#install)
+  - to install dependencies in your virtual environment you can run `poetry install`; more info [here](https://python-poetry.org/docs/cli/#install)
 - for authentication to Github API, please create your personal access token by [those instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic)
     - create `.env` file in main directory and store this token there; see [template.env](template.env) file for example how it should look like
 
@@ -67,10 +67,12 @@ There are some basic developer tools implemented for easier contribution:
   - `make test` - automatically runs all tests in [`tests`](tests) folder
   - `make check` - run both linting and tests
 
+To generate OpenAPI v3, you can run [`openapi.py`](docs/openapi.py) script.
+
 ## Limitations and future work
 - getting data from Github API is still done manually - to download them regularly you would need to implement
 some cron or scheduler
-- application with API endpoints runs locally, but could be deployed remotelly
+- application with API endpoints runs locally, but could be deployed remotely
 - statistics are calculated only for current data, we do not store history
 - the 7 day average is calculated from the latest date for given repository and event type, not from current date
 - add unit tests for database functions and API endpoints
